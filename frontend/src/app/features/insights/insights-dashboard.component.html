@@ -1,0 +1,118 @@
+<div class="page-header">
+  <div>
+    <h1>Compensation insights</h1>
+    <span class="subtitle">Annualised figures in USD; terminated employees excluded</span>
+  </div>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (dashboard(); as d) {
+  <div class="stat-row">
+    <mat-card class="stat">
+      <span class="stat-label">Headcount on payroll</span>
+      <span class="stat-value">{{ d.overview.headcount | number }}</span>
+      <span class="stat-detail">
+        {{ d.overview.departmentCount }} departments · {{ d.overview.countryCount }} countries
+      </span>
+    </mat-card>
+    <mat-card class="stat">
+      <span class="stat-label">Annual payroll cost</span>
+      <span class="stat-value">{{ usd(d.overview.totalAnnualUsd) | money: 'compact' }}</span>
+      <span class="stat-detail">{{ usd(d.overview.totalAnnualUsd) | money }}</span>
+    </mat-card>
+    <mat-card class="stat">
+      <span class="stat-label">Median salary</span>
+      <span class="stat-value">{{ usd(d.overview.medianAnnualUsd) | money }}</span>
+      <span class="stat-detail">mean {{ usd(d.overview.averageAnnualUsd) | money }}</span>
+    </mat-card>
+  </div>
+
+  <div class="grid">
+    <mat-card>
+      <mat-card-content>
+        <h2>Payroll cost by department</h2>
+        <app-bar-chart [items]="costBars(d.byDepartment)" [format]="formatUsdCompact" />
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Payroll cost by country</h2>
+        <app-bar-chart [items]="costBars(d.byCountry)" [format]="formatUsdCompact" color="#00695c" />
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Median salary by level</h2>
+        <app-bar-chart [items]="medianBars(d.byLevel)" [format]="formatUsdCompact" color="#6a1b9a" />
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-content>
+        <h2>Salary distribution</h2>
+        <p class="muted note">People per annual-USD band</p>
+        <app-histogram [bandsInput]="d.distribution" />
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="wide">
+      <mat-card-content>
+        <h2>Pay equity — median salary by gender within level</h2>
+        <p class="muted note">
+          Compared within a level so like is compared with like. A positive gap means the median
+          woman earns less than the median man at that level.
+        </p>
+        <table mat-table [dataSource]="d.payEquity">
+          <ng-container matColumnDef="level">
+            <th mat-header-cell *matHeaderCellDef>Level</th>
+            <td mat-cell *matCellDef="let row">{{ row.level }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="women">
+            <th mat-header-cell *matHeaderCellDef class="numeric">Women — median (count)</th>
+            <td mat-cell *matCellDef="let row" class="numeric mono">
+              {{ usd(row.femaleMedianUsd) | money }}
+              <span class="muted">({{ row.femaleCount | number }})</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="men">
+            <th mat-header-cell *matHeaderCellDef class="numeric">Men — median (count)</th>
+            <td mat-cell *matCellDef="let row" class="numeric mono">
+              {{ usd(row.maleMedianUsd) | money }}
+              <span class="muted">({{ row.maleCount | number }})</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="gap">
+            <th mat-header-cell *matHeaderCellDef class="numeric">Gap</th>
+            <td mat-cell *matCellDef="let row" class="numeric">
+              @if (row.gapPercent !== null && row.gapPercent !== undefined) {
+                <span
+                  class="gap-chip"
+                  [class.bad]="row.gapPercent >= 3"
+                  [class.warn]="row.gapPercent > 0 && row.gapPercent < 3"
+                  [class.good]="row.gapPercent <= 0"
+                >
+                  {{ row.gapPercent > 0 ? '+' : '' }}{{ row.gapPercent }}%
+                </span>
+              } @else {
+                <span class="muted" matTooltip="Too few people in one of the groups to compare">
+                  n/a
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="equityColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: equityColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+}
