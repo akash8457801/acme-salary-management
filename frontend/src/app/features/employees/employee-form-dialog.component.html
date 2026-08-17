@@ -1,0 +1,105 @@
+<h2 mat-dialog-title>{{ isCreate ? 'Add employee' : 'Edit profile' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>First name</mat-label>
+      <input matInput formControlName="firstName" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Last name</mat-label>
+      <input matInput formControlName="lastName" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Work email</mat-label>
+      <input matInput type="email" formControlName="email" />
+      @if (form.controls.email.hasError('email')) {
+        <mat-error>That does not look like an email address</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Department</mat-label>
+      <mat-select formControlName="departmentId">
+        @for (department of referenceData()?.departments; track department.id) {
+          <mat-option [value]="department.id">{{ department.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (isCreate) {
+      <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <mat-select formControlName="countryCode">
+          @for (country of referenceData()?.countries; track country.code) {
+            <mat-option [value]="country.code">
+              {{ country.name }} ({{ country.currency }})
+            </mat-option>
+          }
+        </mat-select>
+        <mat-hint>Sets the payroll currency</mat-hint>
+      </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Job title</mat-label>
+      <input matInput formControlName="jobTitle" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Level</mat-label>
+      <mat-select formControlName="level">
+        @for (level of referenceData()?.levels; track level.value) {
+          <mat-option [value]="level.value">{{ level.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (isCreate) {
+      <mat-form-field appearance="outline">
+        <mat-label>Gender</mat-label>
+        <mat-select formControlName="gender">
+          @for (gender of referenceData()?.genders; track gender.value) {
+            <mat-option [value]="gender.value">{{ gender.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Hire date</mat-label>
+        <input matInput [matDatepicker]="hirePicker" formControlName="hireDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="hirePicker" />
+        <mat-datepicker #hirePicker />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>
+          Starting annual salary{{ selectedCurrency ? ' (' + selectedCurrency + ')' : '' }}
+        </mat-label>
+        <input matInput type="number" formControlName="startingSalary" min="1" />
+      </mat-form-field>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (status of referenceData()?.statuses; track status.value) {
+            <mat-option [value]="status.value">{{ status.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+
+    @if (serverError()) {
+      <div class="server-error">{{ serverError() }}</div>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : isCreate ? 'Hire' : 'Save changes' }}
+  </button>
+</mat-dialog-actions>

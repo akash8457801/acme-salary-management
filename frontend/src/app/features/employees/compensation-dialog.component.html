@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>Record salary change</h2>
+
+<mat-dialog-content>
+  <p class="current-line">
+    {{ data.employee.fullName }} currently earns
+    <strong>{{ data.employee.currentCompensation?.salary | money }}</strong> per year.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>New annual salary ({{ currency }})</mat-label>
+      <input matInput type="number" formControlName="amount" min="1" />
+      @if (form.controls.amount.hasError('required')) {
+        <mat-error>Enter the new salary</mat-error>
+      }
+      @if (form.controls.amount.hasError('min')) {
+        <mat-error>Salary must be greater than zero</mat-error>
+      }
+    </mat-form-field>
+
+    @if (previewChangePercent !== null) {
+      <div
+        class="preview"
+        [class.up]="previewChangePercent > 0"
+        [class.down]="previewChangePercent < 0"
+      >
+        {{ previewChangePercent > 0 ? '+' : '' }}{{ previewChangePercent }}% vs current salary
+      </div>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Effective from</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="effectiveFrom" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+      @if (form.controls.effectiveFrom.hasError('required')) {
+        <mat-error>Pick the date the new salary takes effect</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Reason</mat-label>
+      <mat-select formControlName="reason">
+        @for (reason of referenceData()?.changeReasons; track reason.value) {
+          <mat-option [value]="reason.value">{{ reason.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Note (optional)</mat-label>
+      <input matInput formControlName="note" maxlength="500" />
+    </mat-form-field>
+
+    @if (serverError()) {
+      <div class="server-error">{{ serverError() }}</div>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    {{ saving() ? 'Saving…' : 'Record change' }}
+  </button>
+</mat-dialog-actions>

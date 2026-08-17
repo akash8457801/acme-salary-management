@@ -1,0 +1,118 @@
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (employee(); as e) {
+  <a class="back-link" routerLink="/employees">
+    <mat-icon>arrow_back</mat-icon>
+    All employees
+  </a>
+
+  <div class="page-header">
+    <div>
+      <h1>{{ e.fullName }}</h1>
+      <span class="subtitle">
+        {{ e.jobTitle }} · {{ e.department }} · {{ e.country }} ·
+        <span class="mono">{{ e.employeeCode }}</span>
+      </span>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="openEditDialog()">
+        <mat-icon>edit</mat-icon>
+        Edit profile
+      </button>
+      <button mat-flat-button color="primary" (click)="openCompensationDialog()">
+        <mat-icon>trending_up</mat-icon>
+        Record salary change
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <mat-card class="profile-card">
+      <mat-card-content>
+        <h2>Profile</h2>
+        <dl>
+          <dt>Email</dt>
+          <dd>{{ e.email }}</dd>
+          <dt>Level</dt>
+          <dd>{{ e.level }} · {{ e.levelTitle }}</dd>
+          <dt>Manager</dt>
+          <dd>
+            @if (e.managerId) {
+              <a [routerLink]="['/employees', e.managerId]">{{ e.managerName }}</a>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </dd>
+          <dt>Hired</dt>
+          <dd>{{ e.hireDate | date: 'mediumDate' }}</dd>
+          <dt>Status</dt>
+          <dd>{{ e.status === 'ON_LEAVE' ? 'On leave' : (e.status | titlecase) }}</dd>
+          <dt>Paid in</dt>
+          <dd>{{ e.payrollCurrency }}</dd>
+        </dl>
+
+        @if (e.currentCompensation; as current) {
+          <div class="current-salary">
+            <span class="label">Current annual salary</span>
+            <span class="amount">{{ current.salary | money }}</span>
+            <span class="muted">≈ {{ current.annualUsd | money }} / year</span>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="timeline-card">
+      <mat-card-content>
+        <h2>Compensation history</h2>
+        <p class="muted intro">
+          Every change is kept; nothing is overwritten. Newest first.
+        </p>
+
+        <ol class="timeline">
+          @for (entry of e.compensationHistory; track entry.id) {
+            <li [class.current]="entry.current">
+              <div class="dot"></div>
+              <div class="entry">
+                <div class="entry-head">
+                  <span class="amount mono">{{ entry.salary | money }}</span>
+                  @if (entry.changePercent !== null && entry.changePercent !== undefined) {
+                    <span
+                      class="delta"
+                      [class.up]="entry.changePercent > 0"
+                      [class.down]="entry.changePercent < 0"
+                    >
+                      {{ entry.changePercent > 0 ? '+' : '' }}{{ entry.changePercent }}%
+                    </span>
+                  }
+                  <span class="reason">{{ entry.reasonLabel }}</span>
+                  @if (entry.current) {
+                    <span class="current-badge">current</span>
+                  }
+                </div>
+                <div class="entry-dates muted">
+                  {{ entry.effectiveFrom | date: 'mediumDate' }}
+                  @if (entry.effectiveTo) {
+                    → {{ entry.effectiveTo | date: 'mediumDate' }}
+                  } @else {
+                    → present
+                  }
+                  <span
+                    class="recorded"
+                    matTooltip="When this change was entered into the system"
+                  >
+                    · recorded {{ entry.recordedAt | date: 'mediumDate' }}
+                  </span>
+                </div>
+                @if (entry.note) {
+                  <div class="entry-note">{{ entry.note }}</div>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

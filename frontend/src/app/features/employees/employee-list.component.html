@@ -1,0 +1,169 @@
+<div class="page-header">
+  <div>
+    <h1>Employees</h1>
+    @if (result(); as page) {
+      <span class="subtitle">{{ page.totalElements | number }} people</span>
+    }
+  </div>
+  <div class="actions">
+    <button mat-stroked-button (click)="exportCsv()">
+      <mat-icon>download</mat-icon>
+      Export CSV
+    </button>
+    <button mat-flat-button color="primary" (click)="openHireDialog()">
+      <mat-icon>person_add</mat-icon>
+      Add employee
+    </button>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <mat-form-field appearance="outline" class="search">
+    <mat-label>Search name, email or code</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      [ngModel]="query.q"
+      (ngModelChange)="onSearchTyped($event)"
+      placeholder="e.g. priya, ACME-00042"
+    />
+  </mat-form-field>
+
+  @if (referenceData(); as ref) {
+    <mat-form-field appearance="outline">
+      <mat-label>Department</mat-label>
+      <mat-select [(ngModel)]="query.departmentId" (selectionChange)="onFilterChanged()">
+        <mat-option [value]="undefined">All</mat-option>
+        @for (department of ref.departments; track department.id) {
+          <mat-option [value]="department.id">{{ department.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Country</mat-label>
+      <mat-select [(ngModel)]="query.countryCode" (selectionChange)="onFilterChanged()">
+        <mat-option [value]="undefined">All</mat-option>
+        @for (country of ref.countries; track country.code) {
+          <mat-option [value]="country.code">{{ country.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Level</mat-label>
+      <mat-select [(ngModel)]="query.level" (selectionChange)="onFilterChanged()">
+        <mat-option [value]="undefined">All</mat-option>
+        @for (level of ref.levels; track level.value) {
+          <mat-option [value]="level.value">{{ level.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="query.status" (selectionChange)="onFilterChanged()">
+        <mat-option [value]="undefined">All</mat-option>
+        @for (status of ref.statuses; track status.value) {
+          <mat-option [value]="status.value">{{ status.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+
+  @if (hasFilters) {
+    <button mat-button (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Clear
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (result(); as page) {
+  <div class="table-card">
+    <table
+      mat-table
+      [dataSource]="page.content"
+      matSort
+      [matSortActive]="query.sort === 'SALARY' ? 'annualUsd' : 'name'"
+      [matSortDirection]="query.direction === 'DESC' ? 'desc' : 'asc'"
+      (matSortChange)="onSortChanged($event)"
+      [trackBy]="trackById"
+    >
+      <ng-container matColumnDef="employeeCode">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+        <td mat-cell *matCellDef="let e" class="mono">{{ e.employeeCode }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+        <td mat-cell *matCellDef="let e">
+          <a class="employee-link" [routerLink]="['/employees', e.id]">{{ e.fullName }}</a>
+          <div class="muted email">{{ e.email }}</div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="department">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Department</th>
+        <td mat-cell *matCellDef="let e">{{ e.department }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="country">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Country</th>
+        <td mat-cell *matCellDef="let e">{{ e.country }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="jobTitle">
+        <th mat-header-cell *matHeaderCellDef>Job title</th>
+        <td mat-cell *matCellDef="let e">{{ e.jobTitle }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="level">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Level</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="level-chip">{{ e.level }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="salary">
+        <th mat-header-cell *matHeaderCellDef class="numeric">Salary</th>
+        <td mat-cell *matCellDef="let e" class="numeric mono">{{ e.salary | money }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="annualUsd">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="numeric">Annual USD</th>
+        <td mat-cell *matCellDef="let e" class="numeric mono muted">{{ e.annualUsd | money }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="status-chip" [class]="'status-' + e.status.toLowerCase()">
+            {{ e.status === 'ON_LEAVE' ? 'On leave' : (e.status | titlecase) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="no-data" [attr.colspan]="columns.length">
+          No employees match this filter.
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator
+      [length]="page.totalElements"
+      [pageIndex]="page.page"
+      [pageSize]="page.size"
+      [pageSizeOptions]="[25, 50, 100]"
+      (page)="onPageChanged($event)"
+      showFirstLastButtons
+    />
+  </div>
+}
