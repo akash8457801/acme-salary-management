@@ -1,0 +1,47 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: mat.$azure-palette,
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #f5f6fa;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Shared page furniture, kept global because every feature uses the same skeleton. */
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: #777;
+}
