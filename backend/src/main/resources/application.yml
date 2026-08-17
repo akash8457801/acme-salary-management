@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: salary-management
+
+  datasource:
+    # SQLite takes a single writer lock for the whole database. WAL keeps readers concurrent with
+    # the writer, and busy_timeout makes a contended write wait rather than fail with SQLITE_BUSY.
+    url: jdbc:sqlite:${SALARY_DB_PATH:./data/salary.db}?journal_mode=WAL&busy_timeout=5000&foreign_keys=on
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 8
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+        jdbc:
+          batch_size: 200
+        order_inserts: true
+        order_updates: true
+
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+
+salary:
+  seed:
+    # Seeds 10,000 employees on first start, and only into an empty database.
+    enabled: ${SEED_ENABLED:true}
+    employee-count: ${SEED_EMPLOYEE_COUNT:10000}
+
+logging:
+  level:
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:warn}
