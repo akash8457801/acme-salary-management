@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    # One shared in-memory SQLite per test context: real dialect, zero files, fast startup.
+    url: "jdbc:sqlite:file:testdb?mode=memory&cache=shared"
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      # In-memory SQLite vanishes when its last connection closes; a single connection also
+      # serialises writes, which SQLite would do anyway.
+      maximum-pool-size: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+
+salary:
+  seed:
+    # Integration tests build exactly the data they assert on; the big seeder stays out.
+    enabled: false
