@@ -1,0 +1,13 @@
+target/
+node_modules/
+dist/
+.angular/
+*.db
+*.db-journal
+*.log
+.idea/
+.vscode/
+.DS_Store
+data/
+*.db-wal
+*.db-shm
